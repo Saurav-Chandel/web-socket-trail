@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>chat app</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="">
+    </head>
+    <body>
+
+        <textarea id="chat-log" cols="100" rows="20">
+       {% for chat in chats %}
+          {{chat.content}}
+        {% endfor %} 
+        </textarea><br>
+        <input id="chat-message-input" type="text" size="100"><br>
+        <input id="chat-message-submit" type="button" value="Send">
+        {% comment %} using this loc we can use this groupname within javascript. {% endcomment %}
+        {{groupname|json_script:"group-name"}}  
+        
+        <script>
+        const groupName=JSON.parse(document.getElementById('group-name').textContent)  //string to object
+        console.log(groupName)
+        {% comment %} var ws = new WebSocket('ws://localhost:8000/ws/ac/')   {% endcomment %}
+        var ws = new WebSocket('ws://'
+        + window.location.host 
+        + '/ws/' 
+        + groupName 
+        +'/') 
+
+
+        ws.onopen = function () {
+            console.log('WebSocket connetion open from front end.....')
+            
+        }
+
+        {% comment %}  this property is run when msg reived from client  {% endcomment %}
+        ws.onmessage = function (event) {
+            console.log("EVENT...",event)           ////MessageEvent {isTrusted: true, data: '{"msg": "hello", "user": "admin"}', origin: 'ws://localhost:8000', lastEventId: '', source: null, …}
+            console.log('Message received from server.....',event.data)     // //Message received from server..... {"msg": "hello", "user": "admin"}
+            console.log('type of Message received from server..........',typeof(event.data))    //type of Message received from server.......... string
+            const data=JSON.parse(event.data)   //string to js object
+            console.log('Type of Parsed data...',typeof(data))    //Type of Parsed data... object
+            console.log('Parsed data...',data)                   //Parsed data... {msg: 'hello', user: 'admin'}
+            console.log('Actual data...',data.msg)              //Actual data... hello
+            console.log('username...',data.user)              //Actual data... admin
+            document.querySelector('#chat-log').value +=(data.user + ':' + data.msg + '\n')
+
+        }
+        ws.onerror = function (event) {
+            console.log('WebSocket error occured..........',event)
+            
+        }
+        ws.onclose = function (event) {
+            console.log(('WebSocket connection closed.........',event))
+        };
+
+        document.getElementById('chat-message-submit').onclick = 
+        function(event){
+            const messageInputDom=document.getElementById('chat-message-input')
+            const message=messageInputDom.value
+            ws.send(JSON.stringify({   //js object to string
+                'msg':message
+            })) 
+        messageInputDom.value=''    
+        }  
+    
+        </script>
+    </body>
+</html>
+
+
+
+
+
+{% comment %} <!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Chat Rooms</title>
+</head>
+<body>
+    What chat room would you like to enter?<br>
+    <input id="room-name-input" type="text" size="100"><br>
+    <input id="room-name-submit" type="button" value="Enter">
+
+    <script>
+        document.querySelector('#room-name-input').focus();
+        document.querySelector('#room-name-input').onkeyup = function(e) {
+            if (e.keyCode === 13) {  // enter, return
+                document.querySelector('#room-name-submit').click();
+            }
+        };
+
+        document.querySelector('#room-name-submit').onclick = function(e) {
+            var roomName = document.querySelector('#room-name-input').value;
+            window.location.pathname = '/chat/' + roomName + '/';
+        };
+    </script>
+</body> {% endcomment %}
+
+
+
+
+
+
+
+
+
+
+
